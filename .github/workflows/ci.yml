@@ -1,0 +1,114 @@
+# GitHub Actions CI/CD Pipeline
+# Базовая конфигурация для проверки проекта
+
+name: CI Pipeline
+
+# Определяем события, которые запускают workflow
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch: # Позволяет запускать workflow вручную
+
+jobs:
+  # Задача для проверки синтаксиса Markdown файлов
+  markdown-lint:
+    name: Проверка Markdown файлов
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Шаг 1: Checkout репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Шаг 2: Проверка синтаксиса Markdown
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v14
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+        continue-on-error: true # Временно разрешаем ошибки, пока настраиваем правила
+  
+  # Базовая задача для проверки сборки
+  build:
+    name: Проверка сборки проекта
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Шаг 1: Checkout репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Шаг 2: Проверка структуры проекта
+      - name: Verify project structure
+        run: |
+          echo "Проверка структуры проекта..."
+          
+          # Проверяем наличие основных файлов
+          if [ -f "README.md" ]; then
+            echo "✓ README.md найден"
+          else
+            echo "✗ README.md не найден"
+            exit 1
+          fi
+          
+          if [ -f "CONTRIBUTING.md" ]; then
+            echo "✓ CONTRIBUTING.md найден"
+          else
+            echo "✗ CONTRIBUTING.md не найден"
+            exit 1
+          fi
+          
+          # Проверяем наличие директорий
+          if [ -d ".github/workflows" ]; then
+            echo "✓ .github/workflows директория найдена"
+          else
+            echo "✗ .github/workflows директория не найдена"
+            exit 1
+          fi
+          
+          echo ""
+          echo "Build OK - все базовые проверки пройдены ✓"
+      
+      # Шаг 3: Вывод информации о репозитории
+      - name: Repository information
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+
+# Примечания для будущего развития:
+# 
+# В процессе прохождения курса "Программная инженерия" этот workflow будет дополнен:
+# 
+# 1. Автоматические тесты:
+#    - Юнит-тесты (unit tests)
+#    - Интеграционные тесты (integration tests)
+#    - End-to-end тесты
+# 
+# 2. Автоматическая сборка:
+#    - Компиляция кода
+#    - Минификация и оптимизация
+#    - Создание артефактов сборки
+# 
+# 3. Проверка качества кода:
+#    - Линтеры для различных языков
+#    - Статический анализ кода
+#    - Проверка покрытия тестами
+# 
+# 4. Безопасность:
+#    - Сканирование зависимостей на уязвимости
+#    - Проверка секретов в коде
+# 
+# 5. Развертывание:
+#    - Автоматический деплой в staging
+#    - Автоматический деплой в production (с ручным подтверждением)
+#    - Создание Docker образов
+#    - Публикация релизов
+# 
+# 6. Уведомления:
+#    - Интеграция с системами уведомлений
+#    - Отчеты о статусе сборки
